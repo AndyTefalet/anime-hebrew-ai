@@ -12,6 +12,13 @@ export async function uploadFile(file, onProgress) {
   return data // { job_id, step, message }
 }
 
+export async function uploadText(text) {
+  const form = new FormData()
+  form.append('text', text)
+  const { data } = await api.post('/upload-text', form)
+  return data // { job_id, step, message }
+}
+
 export async function pollStatus(jobId) {
   const { data } = await api.get(`/status/${jobId}`)
   return data // { job_id, step, message }

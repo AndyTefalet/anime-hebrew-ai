@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import './index.css'
-import { uploadFile, pollStatus } from './api/client'
+import { uploadFile, uploadText, pollStatus } from './api/client'
 import UploadCard from './components/UploadCard'
 import ProgressStepper from './components/ProgressStepper'
 import DownloadCard from './components/DownloadCard'
@@ -21,7 +21,13 @@ export default function App() {
     setStep('uploading')
     setMessage('Sending file to server…')
     try {
-      const job = await uploadFile(file)
+      let job
+      if (file.name.toLowerCase().endsWith('.txt')) {
+        const text = await file.text()
+        job = await uploadText(text)
+      } else {
+        job = await uploadFile(file)
+      }
       setJobId(job.job_id)
       setStep(job.step)
       setMessage(job.message)

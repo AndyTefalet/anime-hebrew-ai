@@ -6,14 +6,14 @@ from pathlib import Path
 from typing import Dict
 
 import aiofiles
-from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, File
+from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from backend.services.ffmpeg_service import is_video, is_audio, prepare_audio
 from backend.services.whisper_service import transcribe_to_english
 from backend.services.claude_service import translate_blocks_to_hebrew
-from backend.utils.srt_utils import build_srt
+from backend.utils.srt_utils import build_srt, text_to_srt_blocks
 
 router = APIRouter()
 
@@ -103,6 +103,40 @@ async def upload_file(
     background_tasks.add_task(_run_pipeline, job_id, input_path, filename)
 
     return JobStatus(job_id=job_id, step="uploading", message="File received, starting pipeline…")
+
+
+async def _run_text_pipeline(job_id: str, text: str) -> None:
+    try:
+        english_blocks = text_to_srt_blocks(text)
+        if not english_blocks:
+            raise ValueError("Uploaded text file is empty.")
+
+        _set(job_id, "translating", "Translating to Hebrew with Claude…")
+        hebrew_blocks = await translate_blocks_to_hebrew(english_blocks)
+
+        srt_content = build_srt(hebrew_blocks)
+        output_path = os.path.join(TEMP_DIR, f"{job_id}_hebrew.srt")
+        async with aiofiles.open(output_path, "w", encoding="utf-8") as f:
+            await f.write(srt_content)
+
+        _set(job_id, "done", output_path)
+
+    except Exception as exc:
+        _set(job_id, "error", str(exc))
+
+
+@router.post("/upload-text", response_model=JobStatus)
+async def upload_text(
+    background_tasks: BackgroundTasks,
+    text: str = Form(...),
+):
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="Text content is empty.")
+
+    job_id = str(uuid.uuid4())
+    _set(job_id, "translating", "Translating to Hebrew with Claude…")
+    background_tasks.add_task(_run_text_pipeline, job_id, text)
+    return JobStatus(job_id=job_id, step="translating", message="Translating to Hebrew with Claude…")
 
 
 @router.get("/status/{job_id}", response_model=JobStatus)

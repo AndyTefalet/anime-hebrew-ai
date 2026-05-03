@@ -52,6 +52,24 @@ def whisper_vtt_to_srt_blocks(segments: list) -> List[SRTBlock]:
     return blocks
 
 
+def text_to_srt_blocks(text: str, seconds_per_block: float = 3.0) -> List[SRTBlock]:
+    """Split plain text into SRTBlocks with auto-generated timestamps."""
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    if not lines:
+        lines = [text.strip()] if text.strip() else []
+    blocks = []
+    for i, line in enumerate(lines, start=1):
+        start_s = (i - 1) * seconds_per_block
+        end_s = i * seconds_per_block
+        blocks.append(SRTBlock(
+            index=i,
+            start=_seconds_to_srt_time(start_s),
+            end=_seconds_to_srt_time(end_s),
+            text=line,
+        ))
+    return blocks
+
+
 def _seconds_to_srt_time(seconds: float) -> str:
     ms = int(round(seconds * 1000))
     h = ms // 3_600_000
