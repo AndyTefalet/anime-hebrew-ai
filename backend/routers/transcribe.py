@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from backend.services.ffmpeg_service import is_video, is_audio, prepare_audio
-from backend.services.whisper_service import transcribe_to_english
+from backend.services.whisper_service import transcribe_audio
 from backend.services.claude_service import translate_blocks_to_hebrew
 from backend.utils.srt_utils import build_srt, text_to_srt_blocks
 
@@ -43,13 +43,13 @@ async def _run_pipeline(job_id: str, input_path: str, original_filename: str) ->
         else:
             audio_path = input_path
 
-        # Step 2 — transcribe + translate to English via Whisper
+        # Step 2 — transcribe audio via Whisper (original language, word-level timestamps)
         _set(job_id, "transcribing", "Transcribing audio with Whisper…")
-        english_blocks = await transcribe_to_english(audio_path)
+        transcribed_blocks = await transcribe_audio(audio_path)
 
-        # Step 3 — translate English → Hebrew via Claude
+        # Step 3 — translate to Hebrew via Claude
         _set(job_id, "translating", "Translating to Hebrew with Claude…")
-        hebrew_blocks = await translate_blocks_to_hebrew(english_blocks)
+        hebrew_blocks = await translate_blocks_to_hebrew(transcribed_blocks)
 
         # Step 4 — write SRT output
         srt_content = build_srt(hebrew_blocks)

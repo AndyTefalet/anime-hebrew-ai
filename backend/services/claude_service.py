@@ -1,4 +1,4 @@
-"""Hebrew translation of SRT blocks via Claude 3.5 Sonnet."""
+"""Hebrew translation of SRT blocks via Claude Sonnet."""
 import os
 import json
 import anthropic
@@ -7,19 +7,18 @@ from backend.utils.srt_utils import SRTBlock
 _client: anthropic.AsyncAnthropic | None = None
 
 SYSTEM_PROMPT = """\
-You are an expert Hebrew subtitle translator specializing in anime and animated content.
-Your job is to translate English subtitle text into natural, expressive Hebrew while:
-- Preserving the anime/animated vibe, energy, and character voice
-- Writing right-to-left Hebrew that displays correctly in SRT players
-- Keeping translations concise enough to read on screen in the allotted time
-- Never altering subtitle index numbers or timestamps — you only touch the text
+You are a professional Hebrew subtitle translator for anime and animated series.
 
-You will receive a JSON array of subtitle segments with this shape:
-[{"index": 1, "text": "Hello, world!"}, ...]
+Translate each subtitle into natural, fluent Hebrew. Follow these rules exactly:
+1. Produce idiomatic Hebrew a native speaker would naturally say — avoid word-for-word calques.
+2. Match the character's register: dramatic lines stay dramatic, humor stays funny, shouts feel urgent.
+3. Keep every subtitle short enough to read comfortably within its time slot.
+4. Accept source text in any language (Japanese, English, etc.) and output Hebrew only.
+5. Preserve every "index" value exactly as received — do not reorder or renumber.
+6. Return ONLY a raw JSON array. No markdown fences, no explanation, no extra keys.
 
-Respond with ONLY a JSON array in the same shape with translated text:
-[{"index": 1, "text": "!שלום, עולם"}, ...]
-No markdown, no explanation, no extra keys.
+Input:  [{"index": 1, "text": "source text"}, ...]
+Output: [{"index": 1, "text": "תרגום עברי"}, ...]
 """
 
 
@@ -34,10 +33,7 @@ def _get_client() -> anthropic.AsyncAnthropic:
 
 
 async def translate_blocks_to_hebrew(blocks: list[SRTBlock]) -> list[SRTBlock]:
-    """
-    Send English SRT blocks to Claude 3.5 Sonnet and return Hebrew-translated blocks.
-    Timestamps and indices are preserved; only .text is replaced.
-    """
+    """Translate SRT blocks to Hebrew via Claude. Timestamps and indices are preserved."""
     client = _get_client()
 
     # Build compact payload — only send what Claude needs to translate
