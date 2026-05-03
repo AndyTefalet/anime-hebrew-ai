@@ -4,7 +4,7 @@ load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers.transcribe import router as transcribe_router
+from backend.routers.transcribe import router as transcribe_router
 
 app = FastAPI(title="Ani-Hebrew AI", version="0.1.0")
 

@@ -1,7 +1,7 @@
 """Transcription via OpenAI Whisper API with task='translate' (audio → English)."""
 import os
 from openai import AsyncOpenAI
-from utils.srt_utils import SRTBlock, whisper_vtt_to_srt_blocks
+from backend.utils.srt_utils import SRTBlock, whisper_vtt_to_srt_blocks
 
 _client: AsyncOpenAI | None = None
 

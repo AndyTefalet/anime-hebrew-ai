@@ -2,7 +2,7 @@
 import os
 import json
 import anthropic
-from utils.srt_utils import SRTBlock
+from backend.utils.srt_utils import SRTBlock
 
 _client: anthropic.AsyncAnthropic | None = None
 

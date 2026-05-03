@@ -10,10 +10,10 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from services.ffmpeg_service import is_video, is_audio, prepare_audio
-from services.whisper_service import transcribe_to_english
-from services.claude_service import translate_blocks_to_hebrew
-from utils.srt_utils import build_srt
+from backend.services.ffmpeg_service import is_video, is_audio, prepare_audio
+from backend.services.whisper_service import transcribe_to_english
+from backend.services.claude_service import translate_blocks_to_hebrew
+from backend.utils.srt_utils import build_srt
 
 router = APIRouter()
 
